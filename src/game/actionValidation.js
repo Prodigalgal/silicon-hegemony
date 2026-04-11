@@ -3,7 +3,7 @@
  * @description [v1.6] 赛博行动验证。
  */
 
-import { ACTION_TYPES, ESPIONAGE_SUBTYPES } from './constants';
+import { ACTION_TYPES, ESPIONAGE_SUBTYPES } from './constants.js';
 
 export const actionValidationRules = {
     [ACTION_TYPES.ATTACK]: (params, context) => {

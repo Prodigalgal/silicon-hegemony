@@ -1,7 +1,7 @@
 // src/game/actionHandlers/espionageHandler.js
 
-import { COSTS, ESPIONAGE_SUBTYPES, INTRIGUE_CONSTANTS } from '../constants';
-import { createDeterministicRandom } from './battleUtils';
+import { COSTS, ESPIONAGE_SUBTYPES, INTRIGUE_CONSTANTS } from '../constants.js';
+import { createDeterministicRandom } from './battleUtils.js';
 
 export function handleScout(state, factionId, payload) {
     const { territory_id } = payload;

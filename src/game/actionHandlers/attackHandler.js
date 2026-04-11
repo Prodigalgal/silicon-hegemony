@@ -4,7 +4,7 @@
  * [v1.5] 集成科技 (Doctrines) 和指挥官 (Generals) 加成。
  */
 
-import { getAdjacentTerritories } from '../mapUtils';
+import { getAdjacentTerritories } from '../mapUtils.js';
 import {
     BATTLE_CONSTANTS,
     BATTLE_SATISFACTION_MODIFIERS,
@@ -13,8 +13,8 @@ import {
     SUPPLY_CONSTANTS,
     TERRAIN_TYPES,
     GENERAL_TRAITS // [v1.5]
-} from '../constants';
-import { createDeterministicRandom, getBattleModifier, distributeLosses } from './battleUtils';
+} from '../constants.js';
+import { createDeterministicRandom, getBattleModifier, distributeLosses } from './battleUtils.js';
 
 export function handleAttack(state, factionId, payload) {
     const { from_territory_id, to_territory_id, army_to_send } = payload;

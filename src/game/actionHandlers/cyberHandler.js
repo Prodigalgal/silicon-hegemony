@@ -3,8 +3,8 @@
  * @description [v1.6] 处理赛博网络攻击。
  */
 
-import { COSTS, ACTION_TYPES } from '../constants';
-import { createDeterministicRandom } from './battleUtils';
+import { COSTS, ACTION_TYPES } from '../constants.js';
+import { createDeterministicRandom } from './battleUtils.js';
 
 export function handleCyberAttack(state, factionId, payload) {
     const { type, target_territory_id, target_faction_id } = payload;

@@ -10,31 +10,53 @@ export class TerritoryLayer extends BaseLayer {
         this.graphicsMap = new Map();
         this.geometry = null;
         this.hoveredId = null;
+        this.interactivityEnabled = true;
     }
 
     setGeometry(geometryData) {
         this.geometry = geometryData;
-        this.container.removeChildren();
-        this.graphicsMap.clear();
+        const nextIds = new Set(Object.keys(geometryData));
 
-        Object.values(geometryData).forEach(geo => {
-            const g = new Graphics();
-            g.label = geo.id;
-            g.eventMode = 'static';
-            g.cursor = 'pointer';
+        this.graphicsMap.forEach((graphics, territoryId) => {
+            if (!nextIds.has(territoryId)) {
+                this.container.removeChild(graphics);
+                graphics.destroy();
+                this.graphicsMap.delete(territoryId);
+            }
+        });
 
-            g.on('pointerover', (event) => this._onHover(geo.id, event));
-            g.on('pointerout', () => this._onOut(geo.id));
-            g.on('pointerdown', (e) => {
+        Object.values(geometryData).forEach((geo) => {
+            if (this.graphicsMap.has(geo.id)) {
+                return;
+            }
+
+            const graphics = new Graphics();
+            graphics.label = geo.id;
+            graphics.eventMode = this.interactivityEnabled ? 'static' : 'none';
+            graphics.cursor = 'pointer';
+
+            graphics.on('pointerover', (event) => this._onHover(geo.id, event));
+            graphics.on('pointerout', () => this._onOut(geo.id));
+            graphics.on('pointertap', (event) => {
                 if (!this.callbacks.getIsDragged()) {
                     this.callbacks.onClick?.(geo.id);
-                    e.stopPropagation();
+                    event.stopPropagation();
                 }
             });
 
-            this.container.addChild(g);
-            this.graphicsMap.set(geo.id, g);
+            this.container.addChild(graphics);
+            this.graphicsMap.set(geo.id, graphics);
         });
+    }
+
+    setInteractionEnabled(enabled) {
+        this.interactivityEnabled = enabled;
+        this.graphicsMap.forEach((graphics) => {
+            graphics.eventMode = enabled ? 'static' : 'none';
+        });
+        if (!enabled) {
+            this.hoveredId = null;
+        }
     }
 
     _onHover(id, event) {
@@ -77,9 +99,9 @@ export class TerritoryLayer extends BaseLayer {
     _calculateStyle(t, owner, mapMode, isSelected, isHovered) {
         let fill = COLORS.NEUTRAL_FILL;
         let alpha = 1.0;
-        let stroke = COLORS.NEUTRAL_STROKE;
-        let strokeWidth = 1;
-        let strokeAlpha = 0.3;
+        let stroke = 0x98aecd;
+        let strokeWidth = 1.15;
+        let strokeAlpha = 0.46;
 
         if (mapMode === 'ECONOMIC') {
             let score = t.money_yield * (0.5 + (t.satisfaction / 100) * 0.75) + (t.civilian_factories || 0) * 50;
@@ -138,12 +160,12 @@ export class TerritoryLayer extends BaseLayer {
         } else {
             // POLITICAL
             fill = owner ? parseInt(owner.color.replace('#', '0x'), 16) : COLORS.NEUTRAL_FILL;
-            alpha = owner ? 0.6 + (t.satisfaction / 100) * 0.4 : 0.4;
+            alpha = owner ? 0.62 + (t.satisfaction / 100) * 0.34 : 0.42;
         }
 
         if (mapMode !== 'CYBER') {
             if (isSelected) { stroke = COLORS.HIGHLIGHT_STROKE; strokeWidth = 3; strokeAlpha = 1.0; }
-            else if (isHovered) { stroke = 0xFFFFFF; strokeWidth = 2; strokeAlpha = 0.8; }
+            else if (isHovered) { stroke = 0xFFFFFF; strokeWidth = 2.2; strokeAlpha = 0.88; }
         }
 
         return { fill, alpha, stroke, strokeWidth, strokeAlpha };

@@ -2,10 +2,11 @@
 import { SVG_VIEWBOX_WIDTH, SVG_VIEWBOX_HEIGHT, ZOOM_MIN, ZOOM_MAX } from '../visualConstants';
 
 export class CameraSystem {
-    constructor(app, rootContainer, onUpdate) {
+    constructor(app, rootContainer, onUpdate, options = {}) {
         this.app = app;
         this.rootContainer = rootContainer;
         this.onUpdate = onUpdate; // 回调，用于通知外部重绘 (LOD)
+        this.options = options;
 
         this.isDragging = false;
         this.lastPos = { x: 0, y: 0 };
@@ -68,8 +69,14 @@ export class CameraSystem {
             const dx = e.clientX - this.lastPos.x;
             const dy = e.clientY - this.lastPos.y;
             if (Math.abs(dx) > 2 || Math.abs(dy) > 2) this.hasDragged = true;
-            this.rootContainer.x += dx;
-            this.rootContainer.y += dy;
+
+            if (this.options.onRotate) {
+                this.options.onRotate(dx, dy);
+            } else {
+                this.rootContainer.x += dx;
+                this.rootContainer.y += dy;
+            }
+
             this.lastPos = { x: e.clientX, y: e.clientY };
         }
     }

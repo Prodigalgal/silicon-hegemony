@@ -210,7 +210,7 @@ async function requestJson(body, options = {}) {
 
 function ensureConfig(config) {
     if (!config.apiKey?.trim()) {
-        throw new Error('API Key 不能为空。');
+        throw new Error('API Key / Gateway Client Token 不能为空。');
     }
 
     if (!config.model?.trim()) {

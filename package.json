@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start --hostname 0.0.0.0 --port 5174",
     "lint": "eslint .",
-    "preview": "next start --hostname 0.0.0.0 --port 5174"
+    "test": "node --experimental-specifier-resolution=node --test",
+    "preview": "next start --hostname 0.0.0.0 --port 5174",
+    "playwright:smoke": "node scripts/playwright-smoke.mjs"
   },
   "dependencies": {
     "@babel/plugin-transform-react-jsx": "^7.27.1",
@@ -39,7 +41,8 @@
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
-    "globals": "^16.0.0"
+    "globals": "^16.0.0",
+    "playwright": "^1.59.1"
   },
   "peerDependencies": {
     "react": "^18.2.0",

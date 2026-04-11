@@ -15,13 +15,33 @@ function joinUrl(baseUrl, path) {
     return `${normalizedBaseUrl}/${normalizedPath}`;
 }
 
-function buildHeaders(apiKey, extraHeaders = {}) {
-    return {
+function looksLikeGatewayToken(token) {
+    return `${token || ''}`.startsWith('sk-gw-') || `${token || ''}`.startsWith('ek-gw-');
+}
+
+export function resolveProxyAuthToken(apiKey, gatewayClientKey) {
+    const normalizedGatewayClientKey = `${gatewayClientKey || ''}`.trim();
+    if (normalizedGatewayClientKey) {
+        return normalizedGatewayClientKey;
+    }
+
+    return `${apiKey || ''}`.trim();
+}
+
+export function buildHeaders(apiKey, gatewayClientKey, extraHeaders = {}) {
+    const authToken = resolveProxyAuthToken(apiKey, gatewayClientKey);
+    const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${authToken}`,
         'Accept-Encoding': 'identity',
         ...extraHeaders,
     };
+
+    if (looksLikeGatewayToken(authToken)) {
+        headers['x-api-key'] = authToken;
+    }
+
+    return headers;
 }
 
 function buildCompletionEnvelope(content, finishReason = 'stop') {
@@ -39,7 +59,7 @@ function buildCompletionEnvelope(content, finishReason = 'stop') {
     };
 }
 
-async function requestUpstream(baseUrl, apiKey, payload, stream, timeoutMs = DEFAULT_UPSTREAM_TIMEOUT_MS) {
+async function requestUpstream(baseUrl, apiKey, gatewayClientKey, payload, stream, timeoutMs = DEFAULT_UPSTREAM_TIMEOUT_MS) {
     const controller = new AbortController();
     const normalizedTimeoutMs = Number.isFinite(timeoutMs) && timeoutMs > 0
         ? timeoutMs
@@ -49,7 +69,7 @@ async function requestUpstream(baseUrl, apiKey, payload, stream, timeoutMs = DEF
     try {
         return await fetch(joinUrl(baseUrl, 'chat/completions'), {
             method: 'POST',
-            headers: buildHeaders(apiKey, stream ? { Accept: 'text/event-stream' } : {}),
+            headers: buildHeaders(apiKey, gatewayClientKey, stream ? { Accept: 'text/event-stream' } : {}),
             body: JSON.stringify({
                 ...payload,
                 ...(stream ? { stream: true } : {}),
@@ -131,18 +151,19 @@ export default async function handler(req, res) {
     const {
         baseUrl,
         apiKey,
+        gatewayClientKey,
         payload,
         stream = false,
         timeoutMs = DEFAULT_UPSTREAM_TIMEOUT_MS,
     } = req.body || {};
 
-    if (!baseUrl || !apiKey || !payload) {
-        res.status(400).json({ error: { message: '缺少 baseUrl、apiKey 或 payload。' } });
+    if (!baseUrl || !payload || (!apiKey && !gatewayClientKey)) {
+        res.status(400).json({ error: { message: '缺少 baseUrl、payload 或认证凭据。' } });
         return;
     }
 
     try {
-        const upstreamResponse = await requestUpstream(baseUrl, apiKey, payload, stream, timeoutMs);
+        const upstreamResponse = await requestUpstream(baseUrl, apiKey, gatewayClientKey, payload, stream, timeoutMs);
 
         const contentType = upstreamResponse.headers.get('content-type') || '';
 

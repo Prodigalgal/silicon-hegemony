@@ -4,7 +4,7 @@
  * 通过一个通用的建造函数来减少重复代码。
  */
 
-import { COSTS } from '../../game/constants';
+import { COSTS } from '../../game/constants.js';
 
 /**
  * 通用的建造/升级逻辑处理器。

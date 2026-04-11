@@ -3,15 +3,13 @@
  * @description [v1.7.1] 调整季节周期。
  */
 
-import { ALL_US_STATES } from './mapUtils';
-
 export const SERVER_URL = 'http://localhost:8080';
 export const WEBSOCKET_URL = `${SERVER_URL}/ws-entry`;
 
 export const MAP_BASE_WIDTH = 959;
 export const MAP_BASE_HEIGHT = 593;
 
-// ... (ACTION_TYPES, ESPIONAGE_SUBTYPES, ALL_TERRITORIES, COSTS, ACTION_POINT_COSTS 保持不变) ...
+// ... (ACTION_TYPES, ESPIONAGE_SUBTYPES, COSTS, ACTION_POINT_COSTS 保持不变) ...
 
 export const ACTION_TYPES = {
     RECRUIT: 'RECRUIT',
@@ -45,8 +43,6 @@ export const ESPIONAGE_SUBTYPES = {
     INCITE_UNREST: 'INCITE_UNREST',
     STEAL_FUNDS: 'STEAL_FUNDS',
 };
-
-export const ALL_TERRITORIES = ALL_US_STATES;
 
 export const COSTS = {
     BUILD_FACTORY: 500,
@@ -169,8 +165,6 @@ export const SEASONS = {
     2: { name: "秋季", supply_mod: 1.2, attrition_base: 0 },
     3: { name: "冬季", supply_mod: 0.7, attrition_base: 0.05 },
 };
-
-export const NORTHERN_STATES = ["WA", "ID", "MT", "ND", "MN", "WI", "MI", "NY", "VT", "NH", "ME", "AK"];
 
 export const TECH_DOCTRINES = {
     INDUSTRIAL_WARFARE: {

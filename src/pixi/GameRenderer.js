@@ -2,6 +2,7 @@
 import { Application, Container } from 'pixi.js';
 import { COLORS } from './visualConstants';
 import { CameraSystem } from './systems/CameraSystem';
+import { GlobeLayer } from './layers/GlobeLayer';
 import { GridLayer } from './layers/GridLayer';
 import { TerritoryLayer } from './layers/TerritoryLayer';
 import { BorderLayer } from './layers/BorderLayer';
@@ -11,10 +12,11 @@ import { AnimationLayer } from './layers/AnimationLayer';
 import { WeatherLayer } from './layers/WeatherLayer';
 
 export class GameRenderer {
-    constructor(containerElement, dispatch) {
+    constructor(containerElement, dispatch, interactionOptions = {}) {
         this.app = new Application();
         this.containerElement = containerElement;
         this.dispatch = dispatch;
+        this.interactionOptions = interactionOptions;
 
         this.isReady = false;
         this.isDestroyed = false;
@@ -29,7 +31,7 @@ export class GameRenderer {
     async _init() {
         const { width, height } = this.containerElement.getBoundingClientRect();
         await this.app.init({
-            width, height, backgroundColor: COLORS.BACKGROUND, backgroundAlpha: 1,
+            width, height, backgroundColor: COLORS.BACKGROUND, backgroundAlpha: 0,
             resolution: window.devicePixelRatio || 1, autoDensity: true, antialias: true
         });
 
@@ -43,10 +45,11 @@ export class GameRenderer {
         // 初始化系统
         this.camera = new CameraSystem(this.app, this.rootContainer, () => {
             this.layers?.icon.update(this.gameState, this.mapMode); // 缩放后更新图标 LOD
-        });
+        }, this.interactionOptions);
 
         // 初始化层级 (顺序很重要)
         this.layers = {
+            globe: new GlobeLayer(this.app, this.rootContainer),
             grid: new GridLayer(this.app, this.rootContainer),
             territory: new TerritoryLayer(this.app, this.rootContainer, {
                 onClick: (id) => {
@@ -85,7 +88,12 @@ export class GameRenderer {
 
     setGeometry(geometryData) {
         this.geometry = geometryData;
-        if (this.isReady) this._applyGeometry(geometryData);
+        if (this.isReady) {
+            this._applyGeometry(geometryData);
+            if (this.gameState) {
+                this._applyUpdate(this.gameState, this.mapMode, this.selectedTerritoryId);
+            }
+        }
     }
 
     update(gameState, mapMode, selectedTerritoryId) {
@@ -122,24 +130,36 @@ export class GameRenderer {
     // --- Internal ---
 
     _applyGeometry(geometryData) {
-        Object.values(this.layers).forEach(layer => layer.setGeometry && layer.setGeometry(geometryData));
+        this.layers.globe.setGeometry(geometryData.globe);
+        this.layers.grid.setGeometry(geometryData.territories);
+        this.layers.territory.setGeometry(geometryData.territories);
+        this.layers.link.setGeometry(geometryData.territories);
+        this.layers.border.setGeometry(geometryData);
+        this.layers.animation.setGeometry?.(geometryData.territories);
+        this.layers.icon.setGeometry(geometryData.territories);
+        this.layers.weather.setGeometry?.(geometryData.territories);
     }
 
     _applyUpdate(gameState, mapMode, selectedTerritoryId) {
         this.gameState = gameState;
         this.mapMode = mapMode;
         this.selectedTerritoryId = selectedTerritoryId;
-
-        // 背景色
-        if (mapMode === 'CYBER') this.app.renderer.background.color = COLORS.CYBER_BG;
-        else this.app.renderer.background.color = COLORS.BACKGROUND;
+        const isInteracting = Boolean(this.geometry?.meta?.isInteracting);
 
         // 分发更新
+        this.layers.globe.update(gameState, mapMode);
         this.layers.grid.update(gameState, mapMode);
+        this.layers.territory.setInteractionEnabled(!isInteracting);
         this.layers.territory.update(gameState, mapMode, selectedTerritoryId);
-        this.layers.link.update(gameState, mapMode);
+        this.layers.link.container.visible = !isInteracting;
+        this.layers.icon.container.visible = !isInteracting;
+
+        if (!isInteracting) {
+            this.layers.link.update(gameState, mapMode);
+            this.layers.icon.update(gameState, mapMode);
+        }
+
         this.layers.border.update(gameState, mapMode);
-        this.layers.icon.update(gameState, mapMode);
         this.layers.animation.update(gameState);
         this.layers.weather.update(gameState);
     }

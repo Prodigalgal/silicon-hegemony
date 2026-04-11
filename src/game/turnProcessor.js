@@ -15,13 +15,12 @@ import {
     COALITION_POWER_THRESHOLD,
     SUPPLY_CONSTANTS,
     SEASONS,
-    NORTHERN_STATES,
     TERRAIN_TYPES,
     CYBER_CONSTANTS,
     CRISIS_TYPES,
     TURNS_PER_SEASON // [v1.7.1]
-} from './constants';
-import { getAdjacentTerritories, hasSupplyLine } from "./mapUtils.js";
+} from './constants.js';
+import { getAdjacentTerritories, hasSupplyLine, isWinterAffectedTerritory } from "./mapUtils.js";
 import { calculateFactionTotals } from "./utils.js";
 
 function createSeededRandom(seed) {
@@ -131,8 +130,6 @@ function processSupplyAndAttrition(state, remainingFactionIds) {
     processCapitalReassignment(state);
     const season = state.turn.season || 0;
     const seasonConfig = SEASONS[season];
-    const isWinter = season === 3;
-
     Object.values(state.territories).forEach(t => {
         if (t.owner) {
             const capital = Object.values(state.territories).find(cap => cap.owner === t.owner && cap.is_capital);
@@ -152,7 +149,7 @@ function processSupplyAndAttrition(state, remainingFactionIds) {
             networkTerritoryIds.forEach(id => {
                 const t = state.territories[id];
                 let weatherSupplyMod = seasonConfig.supply_mod;
-                if (isWinter && NORTHERN_STATES.includes(id)) weatherSupplyMod *= 0.5;
+                if (isWinterAffectedTerritory(t, season)) weatherSupplyMod *= 0.5;
                 networkSupplyPool += (t.supply || 0);
                 if (t.sabotaged_turns === 0) {
                     networkSupplyPool += Math.floor((t.civilian_factories || 0) * SUPPLY_CONSTANTS.SUPPLY_PER_FACTORY * weatherSupplyMod);
@@ -171,7 +168,7 @@ function processSupplyAndAttrition(state, remainingFactionIds) {
                         const terrainType = t.terrain || 'PLAINS';
                         const terrainAttritionMod = TERRAIN_TYPES[terrainType].attrition_mod;
                         let weatherAttritionMod = 1.0;
-                        if (isWinter && NORTHERN_STATES.includes(id)) weatherAttritionMod = 2.0;
+                        if (isWinterAffectedTerritory(t, season)) weatherAttritionMod = 2.0;
                         const finalAttritionRate = Math.max(0.01, (SUPPLY_CONSTANTS.ATTRITION_RATE + seasonConfig.attrition_base) * terrainAttritionMod * weatherAttritionMod - depotBonus);
                         const attritionLosses = Math.ceil(t.army.regulars * finalAttritionRate);
                         t.army.regulars -= attritionLosses;

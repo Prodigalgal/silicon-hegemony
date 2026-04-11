@@ -9,7 +9,7 @@ import {
     BASE_ACTION_POINTS,
     ACTION_TYPES,
     TERRAIN_TYPES // [v1.4]
-} from '../game/constants';
+} from '../game/constants.js';
 import { actionHandlers, handleDiplomaticResponses } from '../game/actionHandlers/index.js';
 import { processEndOfTurn } from '../game/turnProcessor.js';
 import { calculateFactionTotals } from '../game/utils.js';

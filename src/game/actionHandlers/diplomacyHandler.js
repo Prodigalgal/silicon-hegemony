@@ -1,5 +1,5 @@
 // src/game/actionHandlers/diplomacyHandler.js
-import { PACT_DURATION } from '../constants';
+import { PACT_DURATION } from '../constants.js';
 
 export function handleProposeDiplomacy(state, factionId, payload, type) {
     const { to_faction_id } = payload;

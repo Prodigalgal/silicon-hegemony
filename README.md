@@ -1,3 +1,5 @@
+> Notion 文档中心：<https://www.notion.so/silicon-hegemony-33b79afa479080e7866cc9533046e98a?pvs=12>
+
 ---
 
 # **游戏设计文档: Silicon Hegemony**

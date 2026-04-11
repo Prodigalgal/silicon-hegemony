@@ -4,16 +4,16 @@
  * [v1.6] 注册赛博行动处理器。
  */
 
-import { ACTION_TYPES } from '../../game/constants';
-import { handleAttack } from './attackHandler';
+import { ACTION_TYPES } from '../../game/constants.js';
+import { handleAttack } from './attackHandler.js';
 import { handleMove, handleMoveSupply } from './movementHandler.js';
 import { handleBuildFactory, handleBuildCivilianFactory, handleBuildFortification, handleBuildPropagandaTower, handleBuildSupplyDepot } from './buildHandler.js';
-import { handleRecruit, handlePropaganda, handleLobbying, handleSetTaxRate, handleResearchAttack } from './politicalHandler';
-import { handleProposeNonAggressionPact, handleProposeTradeAgreement, handleDiplomaticResponses } from './diplomacyHandler';
-import { handleScout, handleEspionage } from './espionageHandler';
-import { handleChooseDoctrine, handleResearchDoctrine } from './techHandler';
-import { handleRecruitGeneral, handleMoveGeneral } from './commanderHandler';
-import { handleCyberAttack } from './cyberHandler'; // [v1.6]
+import { handleRecruit, handlePropaganda, handleLobbying, handleSetTaxRate, handleResearchAttack } from './politicalHandler.js';
+import { handleProposeNonAggressionPact, handleProposeTradeAgreement, handleDiplomaticResponses } from './diplomacyHandler.js';
+import { handleScout, handleEspionage } from './espionageHandler.js';
+import { handleChooseDoctrine, handleResearchDoctrine } from './techHandler.js';
+import { handleRecruitGeneral, handleMoveGeneral } from './commanderHandler.js';
+import { handleCyberAttack } from './cyberHandler.js'; // [v1.6]
 
 export const actionHandlers = {
     [ACTION_TYPES.ATTACK]: handleAttack,

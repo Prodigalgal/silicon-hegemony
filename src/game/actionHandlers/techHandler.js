@@ -3,7 +3,7 @@
  * @description [v1.5] 处理科技树相关的行动。
  */
 
-import { COSTS, TECH_DOCTRINES } from '../constants';
+import { COSTS, TECH_DOCTRINES } from '../constants.js';
 
 export function handleChooseDoctrine(state, factionId, payload) {
     const { doctrine } = payload;

@@ -9,24 +9,31 @@ import { GameRenderer } from '../pixi/GameRenderer';
 const PixiMap = ({ data, onTerritoryHover, onTerritoryOut }) => {
     const containerRef = useRef(null);
     const rendererRef = useRef(null);
-    const geometry = useTerritoryGeometryContext();
+    const { geometry, rotateBy } = useTerritoryGeometryContext();
     const mapMode = useSelector(selectMapMode);
     const selectedTerritoryId = useSelector(state => state.game.view.selectedTerritory);
     const dispatch = useDispatch();
     const hoverCallbackRef = useRef(onTerritoryHover);
     const outCallbackRef = useRef(onTerritoryOut);
+    const rotateCallbackRef = useRef(rotateBy);
 
     useEffect(() => {
         hoverCallbackRef.current = onTerritoryHover;
         outCallbackRef.current = onTerritoryOut;
     }, [onTerritoryHover, onTerritoryOut]);
 
+    useEffect(() => {
+        rotateCallbackRef.current = rotateBy;
+    }, [rotateBy]);
+
     // 1. 初始化渲染器 (Mount)
     useEffect(() => {
         if (!containerRef.current) return;
 
         // 创建渲染器
-        const renderer = new GameRenderer(containerRef.current, dispatch);
+        const renderer = new GameRenderer(containerRef.current, dispatch, {
+            onRotate: (deltaX, deltaY) => rotateCallbackRef.current?.(deltaX, deltaY),
+        });
         rendererRef.current = renderer;
 
         // 绑定回调

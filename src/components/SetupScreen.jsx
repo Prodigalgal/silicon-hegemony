@@ -6,8 +6,6 @@ import { COMMANDER_ARCHETYPES } from '../store/prompt';
 import { showSnackbar } from '../store/uiSlice';
 import { testAIConnection } from '../services/llmService';
 import {
-    AI_PROVIDER_OPTIONS,
-    applyProviderPreset,
     getProviderById,
     getProviderLabel,
     normalizeAiConfig,
@@ -33,8 +31,8 @@ const createInitialFactionConfig = (index, isHuman = false) => {
         isHuman,
         commanderName: commander.name,
         supplementalStrategy: "",
-        providerId: 'openai',
-        apiKey: ''
+        providerId: 'openai_compatible',
+        apiKey: '',
     });
 };
 
@@ -94,14 +92,9 @@ function AIServiceConfig({ factionsConfig, onConfigChange }) {
         return <Typography sx={{ color: 'text.secondary', textAlign: 'center', mt: 2 }}>没有需要配置AI服务的势力。</Typography>;
     }
 
-    const handleProviderChange = (id, providerId) => {
-        onConfigChange(id, applyProviderPreset(factionsConfig[id], providerId));
-        setTestResultById(prev => ({ ...prev, [id]: null }));
-    };
-
     const handleTestConnection = async (id) => {
         const config = normalizeAiConfig(factionsConfig[id]);
-        const provider = getProviderById(config.providerId);
+        const provider = getProviderById();
 
         if (!config.apiKey.trim()) {
             dispatch(showSnackbar({ message: `请先为 "${config.name}" 填写 ${provider.apiKeyLabel}。`, severity: 'warning' }));
@@ -151,29 +144,14 @@ function AIServiceConfig({ factionsConfig, onConfigChange }) {
         <Stack spacing={3}>
             {aiFactions.map(([id, config]) => (
                 <Paper key={id} variant="outlined" sx={{ p: 2 }}>
-                    <Typography variant="h6" gutterBottom>{config.name} - OpenAI / Compatible 配置</Typography>
+                    <Typography variant="h6" gutterBottom>{config.name} - OpenAI-Compatible 配置</Typography>
                     {(() => {
-                        const provider = getProviderById(config.providerId);
+                        const provider = getProviderById();
                         const testResult = testResultById[id];
                         const isTesting = !!testingById[id];
 
                         return (
                             <Stack spacing={2}>
-                                <FormControl fullWidth size="small">
-                                    <InputLabel>接口类型</InputLabel>
-                                    <Select
-                                        value={config.providerId}
-                                        label="接口类型"
-                                        onChange={(e) => handleProviderChange(id, e.target.value)}
-                                    >
-                                        {AI_PROVIDER_OPTIONS.map(providerOption => (
-                                            <MenuItem key={providerOption.id} value={providerOption.id}>
-                                                {providerOption.label}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
                                 <TextField
                                     label="模型名称"
                                     value={config.model}
@@ -182,31 +160,13 @@ function AIServiceConfig({ factionsConfig, onConfigChange }) {
                                     helperText={provider.placeholder}
                                 />
 
-                                {provider.models.length > 0 && (
-                                    <FormControl fullWidth size="small">
-                                        <InputLabel>快速选择模型</InputLabel>
-                                        <Select
-                                            value={provider.models.includes(config.model) ? config.model : ''}
-                                            label="快速选择模型"
-                                            onChange={(e) => onConfigChange(id, 'model', e.target.value)}
-                                        >
-                                            {provider.models.map(modelOption => (
-                                                <MenuItem key={modelOption} value={modelOption}>
-                                                    {modelOption}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                )}
-
                                 <TextField
                                     label="服务端点 (Base URL)"
                                     value={config.baseUrl}
                                     onChange={(e) => onConfigChange(id, 'baseUrl', e.target.value)}
                                     size="small"
-                                    placeholder={provider.supportsCustomBaseUrl ? "e.g., https://your-openai-compatible-host/v1" : provider.baseUrl}
-                                    disabled={!provider.supportsCustomBaseUrl}
-                                    helperText={provider.supportsCustomBaseUrl ? "使用自定义 OpenAI-Compatible 服务时需要手动填写。" : "OpenAI 官方接口使用固定端点。"}
+                                    placeholder={provider.baseUrlPlaceholder}
+                                    helperText={provider.baseUrlHelperText}
                                 />
 
                                 <TextField
@@ -216,6 +176,7 @@ function AIServiceConfig({ factionsConfig, onConfigChange }) {
                                     value={config.apiKey}
                                     onChange={(e) => onConfigChange(id, 'apiKey', e.target.value)}
                                     size="small"
+                                    helperText="如果接的是 ai-gateway，这里直接填写 gateway client token。"
                                 />
 
                                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
@@ -227,7 +188,6 @@ function AIServiceConfig({ factionsConfig, onConfigChange }) {
                                     >
                                         {isTesting ? '测试中...' : '测试连接'}
                                     </Button>
-                                    <Chip label={getProviderLabel(config)} size="small" color="info" variant="outlined" />
                                 </Stack>
 
                                 {testResult && (
@@ -383,7 +343,7 @@ function SetupScreen({ isSingleFactionMode = false, factionIdToConfigure, initia
         for (const config of finalConfigsArray) {
             if (config.isHuman) continue;
             const normalizedConfig = normalizeAiConfig(config);
-            const provider = getProviderById(normalizedConfig.providerId);
+            const provider = getProviderById();
 
             if (!normalizedConfig.apiKey.trim()) {
                 dispatch(showSnackbar({ message: `请为AI势力 "${config.name}" 输入 ${provider.apiKeyLabel}。`, severity: 'error' }));

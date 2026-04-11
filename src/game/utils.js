@@ -3,10 +3,13 @@
  * @description 提供游戏核心的工具函数。
  * [v1.6] 初始化赛博网络和危机状态。
  */
-import { ALL_TERRITORIES, BASE_ACTION_POINTS } from './constants';
-import { STATE_TERRAIN_MAPPING, SERVER_NODES } from './mapUtils';
+import { BASE_ACTION_POINTS } from './constants.js';
+import { getAllTerritories, getConnectedTerritories, getTerritoryDefinition } from './mapUtils.js';
 
 export function createInitialGameState(factionsConfig) {
+    const allTerritories = getAllTerritories();
+    const connectedTerritories = getConnectedTerritories();
+
     const initialState = {
         gameStatus: 'running',
         turnSeed: Date.now(),
@@ -30,19 +33,25 @@ export function createInitialGameState(factionsConfig) {
         },
     };
 
-    initialState.territories = ALL_TERRITORIES.reduce((acc, id) => {
-        const terrainType = STATE_TERRAIN_MAPPING[id] || 'PLAINS';
-        const nodeLevel = SERVER_NODES[id] || 0; // [v1.6]
+    initialState.territories = allTerritories.reduce((acc, id) => {
+        const definition = getTerritoryDefinition(id);
+        const terrainType = definition?.terrain || 'PLAINS';
+        const nodeLevel = definition?.serverNodeLevel || 0;
+        const basePopulation = definition?.basePopulation || 500000;
+        const baseMoneyYield = definition?.moneyYield || 50;
 
         acc[id] = {
             id,
+            name: definition?.name || id,
             owner: null,
             terrain: terrainType,
-            server_node_level: nodeLevel, // [v1.6] 0-3
-            population: Math.floor(Math.random() * 500000) + 500000,
+            latitude: definition?.latitude || 0,
+            longitude: definition?.longitude || 0,
+            server_node_level: nodeLevel,
+            population: basePopulation,
             army: { regulars: 0, militia: 0 },
             satisfaction: 70,
-            money_yield: Math.floor(Math.random() * 100) + 50,
+            money_yield: baseMoneyYield,
             factories: 0,
             civilian_factories: 0,
             fort_level: 0,
@@ -91,26 +100,30 @@ export function createInitialGameState(factionsConfig) {
         initialState.diplomaticTies[factionId] = {};
     });
 
-    const availableTerritories = [...ALL_TERRITORIES];
+    const availableTerritories = connectedTerritories.length > 0
+        ? [...connectedTerritories]
+        : [...allTerritories];
     Object.keys(initialState.factions).forEach(factionId => {
         const randomIndex = Math.floor(Math.random() * availableTerritories.length);
         const capitalId = availableTerritories.splice(randomIndex, 1)[0];
 
         const capital = initialState.territories[capitalId];
         capital.owner = factionId;
-        capital.population = 1500000;
+        capital.population = Math.round(capital.population * 1.35);
         capital.army.regulars = 25000;
-        capital.factories = 1;
-        capital.civilian_factories = 1;
+        capital.factories = capital.server_node_level >= 2 ? 2 : 1;
+        capital.civilian_factories = capital.server_node_level >= 1 ? 2 : 1;
         capital.satisfaction = 80;
         capital.is_capital = true;
         capital.supply = 1000;
     });
 
-    availableTerritories.forEach(territoryId => {
+    allTerritories
+        .filter((territoryId) => !Object.values(initialState.factions).some((faction) => initialState.territories[territoryId]?.owner === faction.id))
+        .forEach(territoryId => {
         const neutralTerritory = initialState.territories[territoryId];
         neutralTerritory.owner = null;
-        neutralTerritory.army.militia = Math.floor(Math.random() * 10000) + 5000;
+        neutralTerritory.army.militia = Math.max(1200, Math.round(neutralTerritory.population * 0.004));
         neutralTerritory.satisfaction = 50;
     });
 

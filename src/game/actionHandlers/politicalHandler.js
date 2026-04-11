@@ -1,7 +1,7 @@
 // src/game/actionHandlers/politicalHandler.js
 
-import { COSTS, PROPAGANDA_EFFECT, RECRUITMENT_POLICIES, BATTLE_CONSTANTS, RESEARCH_ATTACK_INCREMENT, INTRIGUE_CONSTANTS } from '../constants';
-import { hasSupplyLine } from '../mapUtils';
+import { COSTS, PROPAGANDA_EFFECT, RECRUITMENT_POLICIES, BATTLE_CONSTANTS, RESEARCH_ATTACK_INCREMENT, INTRIGUE_CONSTANTS } from '../constants.js';
+import { hasSupplyLine } from '../mapUtils.js';
 
 export function handleRecruit(state, factionId, payload) {
     const { territory_id, policy } = payload;

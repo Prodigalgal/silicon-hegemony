@@ -7,8 +7,8 @@
  * 3. [核心修复] 注入领土邻接关系表，为AI提供地理知识。
  */
 
-import {COMMANDER_ARCHETYPES, GDD_PROMPT_TEMPLATE} from '../store/prompt';
-import { US_STATE_ADJACENCY, getVisibleTerritoryIds } from './mapUtils';
+import {COMMANDER_ARCHETYPES, GDD_PROMPT_TEMPLATE} from '../store/prompt.js';
+import { getAdjacencySnapshot, getVisibleTerritoryIds } from './mapUtils.js';
 
 /**
  * 为指定的AI势力生成一个完整的、信息丰富的决策提示。
@@ -134,7 +134,11 @@ export function generatePromptForFaction(faction, factionAiConfig, state) {
     prompt = prompt.replace('[Incoming Diplomatic Proposals]', JSON.stringify(incomingProposals, null, 2));
     prompt = prompt.replace('[Recent Key Events]', recentKeyEvents || "无特别重要的近期事件。");
 
-    prompt = prompt.replace('[Territory Adjacency List]', JSON.stringify(US_STATE_ADJACENCY, null, 2));
+    const adjacencyContextIds = new Set([
+        ...visibleIds,
+        ...factionTerritories.map((territory) => territory.id),
+    ]);
+    prompt = prompt.replace('[Territory Adjacency List]', JSON.stringify(getAdjacencySnapshot(adjacencyContextIds), null, 2));
 
     console.log(`[日志][PromptGenerator] 提示生成完毕。`);
     return prompt;

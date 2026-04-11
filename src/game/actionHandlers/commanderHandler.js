@@ -3,8 +3,8 @@
  * @description [v1.5] 处理将领招募与调动。
  */
 
-import { COSTS, GENERAL_TRAITS } from '../constants';
-import { createDeterministicRandom } from './battleUtils';
+import { COSTS, GENERAL_TRAITS } from '../constants.js';
+import { createDeterministicRandom } from './battleUtils.js';
 
 function generateGeneralName() {
     const names = ["Smith", "Patton", "Zhukov", "Rommel", "Eisenhower", "MacArthur", "Montgomery", "Guderian", "Lee", "Grant"];

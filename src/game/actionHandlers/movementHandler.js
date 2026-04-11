@@ -3,7 +3,7 @@
  * @description 包含了所有与“移动”相关的行动处理器，如移动军队和运输补给。
  */
 
-import { getAdjacentTerritories } from '../mapUtils';
+import { getAdjacentTerritories } from '../mapUtils.js';
 
 export function handleMove(state, factionId, payload) {
     const { from_territory_id, to_territory_id, army_amount } = payload;
