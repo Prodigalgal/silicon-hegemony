@@ -2,8 +2,11 @@
 import React, { useState } from 'react';
 import { Popover, Box, Typography, Divider, List, ListItemText } from '@mui/material';
 import { useGameMapViewModel } from '../hooks/useGameMapViewModel';
+import GpuGlobeMap from './GpuGlobeMap';
 import PixiMap from './PixiMap';
 import { TAX_RATES, SUPPLY_CONSTANTS, TERRAIN_TYPES, GENERAL_TRAITS } from '../game/constants';
+
+const MAP_RENDERER_MODE = 'gpu';
 
 // ... (TerritoryPopoverContent 保持不变) ...
 const TerritoryPopoverContent = ({ territory, faction }) => {
@@ -118,12 +121,21 @@ function GameMap({ data }) {
                 <TerritoryPopoverContent territory={popoverTerritory} faction={popoverFaction} season={currentSeason} />
             </Popover>
 
-            <PixiMap
-                data={data}
-                visuals={territoryVisuals}
-                onTerritoryHover={handleTerritoryHover}
-                onTerritoryOut={handleTerritoryOut}
-            />
+            {MAP_RENDERER_MODE === 'gpu' ? (
+                <GpuGlobeMap
+                    data={data}
+                    visuals={territoryVisuals}
+                    onTerritoryHover={handleTerritoryHover}
+                    onTerritoryOut={handleTerritoryOut}
+                />
+            ) : (
+                <PixiMap
+                    data={data}
+                    visuals={territoryVisuals}
+                    onTerritoryHover={handleTerritoryHover}
+                    onTerritoryOut={handleTerritoryOut}
+                />
+            )}
         </div>
     );
 }

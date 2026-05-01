@@ -9,7 +9,7 @@ import { GameRenderer } from '../pixi/GameRenderer';
 const PixiMap = ({ data, onTerritoryHover, onTerritoryOut }) => {
     const containerRef = useRef(null);
     const rendererRef = useRef(null);
-    const { geometry, rotateBy } = useTerritoryGeometryContext();
+    const { geometry, rotateBy, setProjectedGeometryEnabled } = useTerritoryGeometryContext();
     const mapMode = useSelector(selectMapMode);
     const selectedTerritoryId = useSelector(state => state.game.view.selectedTerritory);
     const dispatch = useDispatch();
@@ -25,6 +25,12 @@ const PixiMap = ({ data, onTerritoryHover, onTerritoryOut }) => {
     useEffect(() => {
         rotateCallbackRef.current = rotateBy;
     }, [rotateBy]);
+
+    useEffect(() => {
+        setProjectedGeometryEnabled?.(true);
+
+        return () => setProjectedGeometryEnabled?.(false);
+    }, [setProjectedGeometryEnabled]);
 
     // 1. 初始化渲染器 (Mount)
     useEffect(() => {

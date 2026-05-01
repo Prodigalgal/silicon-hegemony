@@ -15,9 +15,14 @@ export const useTerritoryGeometryContext = () => {
 };
 
 export const TerritoryGeometryProvider = ({ children }) => {
-    const [adminRegionDataState, setAdminRegionDataState] = useState({ featureCollection: null, loading: true, error: null });
+    const [adminRegionDataState, setAdminRegionDataState] = useState({
+        featureCollection10m: null,
+        loading: true,
+        error: null,
+    });
     const [rotation, setRotation] = useState([100, -25, 0]);
     const [isInteracting, setIsInteracting] = useState(false);
+    const [projectedGeometryEnabled, setProjectedGeometryEnabled] = useState(false);
     const rotationRef = useRef(rotation);
     const animationFrameRef = useRef(null);
     const interactionTimeoutRef = useRef(null);
@@ -25,16 +30,24 @@ export const TerritoryGeometryProvider = ({ children }) => {
     useEffect(() => {
         const loadData = async () => {
             try {
-                const response = await fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_1_states_provinces.geojson');
-                if (!response.ok) {
-                    throw new Error('Failed to fetch admin region map data');
+                const response10m = await fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson');
+                if (!response10m.ok) {
+                    throw new Error('Failed to fetch 10m admin region map data');
                 }
 
-                const featureCollection = await response.json();
-                setAdminRegionDataState({ featureCollection, loading: false, error: null });
+                const featureCollection10m = await response10m.json();
+                setAdminRegionDataState({
+                    featureCollection10m,
+                    loading: false,
+                    error: null,
+                });
             } catch (error) {
                 console.error(error);
-                setAdminRegionDataState({ featureCollection: null, loading: false, error });
+                setAdminRegionDataState({
+                    featureCollection10m: null,
+                    loading: false,
+                    error,
+                });
             }
         };
 
@@ -46,12 +59,12 @@ export const TerritoryGeometryProvider = ({ children }) => {
     }, [rotation]);
 
     const territoryCatalog = useMemo(() => {
-        if (!adminRegionDataState.featureCollection) {
+        if (!adminRegionDataState.featureCollection10m) {
             return null;
         }
 
-        return buildTerritoryCatalog(adminRegionDataState.featureCollection);
-    }, [adminRegionDataState.featureCollection]);
+        return buildTerritoryCatalog(adminRegionDataState.featureCollection10m);
+    }, [adminRegionDataState.featureCollection10m]);
 
     useEffect(() => {
         if (territoryCatalog) {
@@ -104,12 +117,12 @@ export const TerritoryGeometryProvider = ({ children }) => {
     }, []);
 
     const geometry = useMemo(() => {
-        if (!adminRegionDataState.featureCollection || !territoryCatalog) {
+        if (!projectedGeometryEnabled || !adminRegionDataState.featureCollection10m || !territoryCatalog) {
             return null;
         }
 
         return buildProjectedGeometry(territoryCatalog, rotation, isInteracting);
-    }, [adminRegionDataState.featureCollection, isInteracting, rotation, territoryCatalog]);
+    }, [adminRegionDataState.featureCollection10m, isInteracting, projectedGeometryEnabled, rotation, territoryCatalog]);
 
     if (adminRegionDataState.loading) {
         return (
@@ -124,7 +137,15 @@ export const TerritoryGeometryProvider = ({ children }) => {
     }
 
     return (
-        <TerritoryGeometryContext.Provider value={{ geometry, rotateBy, territoryCatalog, isInteracting }}>
+        <TerritoryGeometryContext.Provider value={{
+            geometry,
+            isInteracting,
+            projectedGeometryEnabled,
+            rotateBy,
+            rotation,
+            setProjectedGeometryEnabled,
+            territoryCatalog,
+        }}>
             {children}
         </TerritoryGeometryContext.Provider>
     );
@@ -162,9 +183,9 @@ function buildProjectedGeometry(territoryCatalog, rotation, isInteracting) {
             fallbackMarkerRadius: 0,
         };
 
-    Object.entries(territoryCatalog.featuresById).forEach(([territoryId, feature]) => {
-        const polygons = projectFeatureToPolygons(feature, projection, projectionOptions);
-        const [x, y] = pathGenerator.centroid(feature);
+    Object.entries(territoryCatalog.featuresById).forEach(([territoryId, displayFeature]) => {
+        const polygons = projectFeatureToPolygons(displayFeature, projection, projectionOptions);
+        const [x, y] = pathGenerator.centroid(displayFeature);
 
         if (polygons.length === 0 && projectionOptions.fallbackMarkerRadius > 0 && Number.isFinite(x) && Number.isFinite(y)) {
             polygons.push(createMarkerPolygon(x, y, projectionOptions.fallbackMarkerRadius));
